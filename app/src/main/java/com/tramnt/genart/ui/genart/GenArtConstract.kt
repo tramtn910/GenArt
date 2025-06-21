@@ -7,13 +7,14 @@ import com.tramnt.genart.data.model.Style
 import com.tramnt.genart.data.model.StyleCategory
 
 sealed class GenArtIntent : MviIntent {
-    object EnterPrompt : GenArtIntent()
-    object AddPhoto : GenArtIntent()
-    object SelectStyle : GenArtIntent()
-    object GenerateAI : GenArtIntent()
-    object LoadStyles : GenArtIntent()
+    data object EnterPrompt : GenArtIntent()
+    data object AddPhoto : GenArtIntent()
+    data object SelectStyle : GenArtIntent()
+    data object GenerateAI : GenArtIntent()
+    data object LoadStyles : GenArtIntent()
     data class SelectStyleCategory(val category: StyleCategory) : GenArtIntent()
     data class SelectStyleItem(val style: Style) : GenArtIntent()
+    data class PhotoSelected(val photoUri: String) : GenArtIntent()
 }
 
 data class GenArtViewState(
@@ -28,9 +29,6 @@ data class GenArtViewState(
 ) : MviViewState
 
 sealed class GenArtEffect : MviEffect {
-    object ShowPromptInput : GenArtEffect()
-    object ShowPhotoPicker : GenArtEffect()
-    object ShowStyleSelector : GenArtEffect()
-    object ShowGenerateResult : GenArtEffect()
+    data object ShowPhotoPicker : GenArtEffect()
     data class ShowError(val message: String) : GenArtEffect()
 } 

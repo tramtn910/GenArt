@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,75 +33,172 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.tramnt.genart.R
+import com.tramnt.genart.util.ImageUtils
 
 @Composable
 fun PickPhotoScreen(
     state: PickPhotoViewState,
-    onIntent: (PickPhotoIntent) -> Unit
+    onIntent: (PickPhotoIntent) -> Unit,
+    onRequestPermission: () -> Unit,
+    onBackClick: () -> Unit,
+    onNextClick: () -> Unit,
 ) {
-    Column(modifier = Modifier.fillMaxSize().background(Color.White)) {
+    Column(modifier = Modifier
+        .fillMaxSize()
+        .background(Color.White)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(16.dp)
+                .padding(top = 32.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            IconButton(onClick = { onIntent(PickPhotoIntent.Close) }) {
+            IconButton(onClick = onBackClick) {
                 Icon(Icons.Default.Close, contentDescription = "Close")
             }
             TextButton(
-                onClick = { onIntent(PickPhotoIntent.Next) },
+                onClick = onNextClick,
                 enabled = state.selectedPhoto != null
             ) {
                 Text("Next")
             }
         }
 
-        if (state.isLoading) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(state.photos) { uri ->
-                    Box(
-                        modifier = Modifier
-                            .aspectRatio(1f)
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { onIntent(PickPhotoIntent.SelectPhoto(uri)) }
-                    ) {
-                        Image(
-                            painter = rememberAsyncImagePainter(uri),
-                            contentDescription = null,
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
-                        )
-                        val iconPainter = if (state.selectedPhoto == uri) {
-                            painterResource(id = R.drawable.ic_select)
-                        } else {
-                            painterResource(id = R.drawable.ic_unselected)
-                        }
-
-                        Image(
-                            painter = iconPainter,
-                            contentDescription = null,
-                            modifier = Modifier
-                                .align(Alignment.TopEnd)
-                                .padding(8.dp)
-                                .size(24.dp)
-                        )
-                    }
+        when {
+            state.isLoading -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
                 }
+            }
+            !state.hasPermission -> {
+                PermissionRequiredContent(onRequestPermission)
+            }
+            state.photos.isEmpty() -> {
+                EmptyPhotosContent()
+            }
+            else -> {
+                PhotosGrid(state, onIntent)
+            }
+        }
+    }
+}
+
+@Composable
+private fun PermissionRequiredContent(
+    onRequestPermission: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isModernAndroid = ImageUtils.isModernAndroid()
+    
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "Permission Required",
+                modifier = Modifier.size(64.dp),
+                tint = Color.Gray
+            )
+            Text(
+                text = if (isModernAndroid) "Photo Access Required" else "Storage Permission Required",
+                style = androidx.compose.material3.MaterialTheme.typography.headlineSmall
+            )
+            Text(
+                text = if (isModernAndroid) {
+                    "This app needs access to your photos to let you select an image for style transfer. Please grant permission when prompted."
+                } else {
+                    "This app needs access to your device storage to let you select an image for style transfer. Please grant permission when prompted."
+                },
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 32.dp)
+            )
+            Button(
+                onClick = onRequestPermission
+            ) {
+                Text("Request Permission")
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyPhotosContent(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Notifications,
+                contentDescription = "No Photos",
+                modifier = Modifier.size(64.dp),
+                tint = Color.Gray
+            )
+            Text(
+                text = "No Photos Found",
+                style = androidx.compose.material3.MaterialTheme.typography.headlineSmall
+            )
+            Text(
+                text = "No photos were found on your device.",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 32.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun PhotosGrid(
+    state: PickPhotoViewState,
+    onIntent: (PickPhotoIntent) -> Unit
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Fixed(3),
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(state.photos) { uri ->
+            Box(
+                modifier = Modifier
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { onIntent(PickPhotoIntent.SelectPhoto(uri)) }
+            ) {
+                Image(
+                    painter = rememberAsyncImagePainter(uri),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+                val iconPainter = if (state.selectedPhoto == uri) {
+                    painterResource(id = R.drawable.ic_select)
+                } else {
+                    painterResource(id = R.drawable.ic_unselected)
+                }
+
+                Image(
+                    painter = iconPainter,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .size(24.dp)
+                )
             }
         }
     }
@@ -112,8 +211,12 @@ private fun PickPhotoScreenPreview() {
         state = PickPhotoViewState(
             photos = listOf(),
             selectedPhoto = null,
-            isLoading = false
+            isLoading = false,
+            hasPermission = true
         ),
-        onIntent = {}
+        onIntent = {/* no-op */},
+        onRequestPermission = {/* no-op */},
+        onBackClick = {/* no-op */},
+        onNextClick = {/* no-op */}
     )
 }

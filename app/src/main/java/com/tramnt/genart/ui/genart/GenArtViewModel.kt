@@ -24,7 +24,12 @@ class GenArtViewModel @Inject constructor(
                 // Handle prompt input
             }
             is GenArtIntent.AddPhoto -> {
-                // Handle photo selection
+                viewModelScope.launch {
+                    sendEffect { GenArtEffect.ShowPhotoPicker }
+                }
+            }
+            is GenArtIntent.PhotoSelected -> {
+                setState { copy(photoUri = intent.photoUri) }
             }
             is GenArtIntent.SelectStyle -> {
                 // Handle style selection
