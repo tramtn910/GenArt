@@ -1,11 +1,7 @@
 package com.tramnt.genart
 
 import android.app.Application
-import com.tramnt.genart.di.AppContainer
+import dagger.hilt.android.HiltAndroidApp
 
-class GenArtApplication : Application() {
-    override fun onCreate() {
-        super.onCreate()
-        AppContainer.initialize(this)
-    }
-}
+@HiltAndroidApp
+class GenArtApplication : Application() 
