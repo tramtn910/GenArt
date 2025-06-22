@@ -1,10 +1,12 @@
 package com.tramnt.genart.data.remote
 
+import android.content.Context
 import com.google.gson.GsonBuilder
 import com.tramnt.genart.domain.repository.SignatureRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -69,6 +71,15 @@ object NetworkConfig {
 
     @Provides
     @Singleton
+    fun provideImageGenerationApiService(@Named("signature") retrofit: Retrofit): ImageGenerationApiService =
+        retrofit.create(ImageGenerationApiService::class.java)
+
+    @Provides
+    @Singleton
     fun provideSignatureRepository(signatureApiService: SignatureApiService): SignatureRepository =
         SignatureRepository(signatureApiService)
+
+    @Provides
+    @Singleton
+    fun provideContext(@ApplicationContext context: Context): Context = context
 } 

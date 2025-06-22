@@ -7,32 +7,28 @@ import com.tramnt.genart.data.model.Style
 import com.tramnt.genart.data.model.StyleCategory
 
 sealed class GenArtIntent : MviIntent {
-    data object EnterPrompt : GenArtIntent()
+    data class UpdatePrompt(val prompt: String) : GenArtIntent()
     data object AddPhoto : GenArtIntent()
-    data object SelectStyle : GenArtIntent()
     data object GenerateAI : GenArtIntent()
     data object LoadStyles : GenArtIntent()
     data class SelectStyleCategory(val category: StyleCategory) : GenArtIntent()
     data class SelectStyleItem(val style: Style) : GenArtIntent()
     data class PhotoSelected(val photoUri: String) : GenArtIntent()
-    data object TestAuthentication : GenArtIntent()
-    data object ClearAuthStatus : GenArtIntent()
 }
 
 data class GenArtViewState(
     val prompt: String = "",
     val photoUri: String? = null,
-    val selectedStyle: String? = null,
     val styleCategories: List<StyleCategory> = emptyList(),
     val selectedCategory: StyleCategory? = null,
     val selectedStyleItem: Style? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val isAuthenticating: Boolean = false,
-    val authStatus: String? = null,
+    val isGenerating: Boolean = false
 ) : MviViewState
 
 sealed class GenArtEffect : MviEffect {
-    data object ShowPhotoPicker : GenArtEffect()
-    data class ShowError(val message: String) : GenArtEffect()
+    data object ShowPhotoPicker : MviEffect()
+    data class ShowError(val message: String) : MviEffect()
+    data class NavigateToResult(val imageUrl: String) : MviEffect()
 } 

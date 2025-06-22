@@ -1,6 +1,8 @@
 package com.tramnt.genart.di
 
+import com.tramnt.genart.data.repository.ImageGenerationRepositoryImpl
 import com.tramnt.genart.data.repository.StyleRepositoryImpl
+import com.tramnt.genart.domain.repository.ImageGenerationRepository
 import com.tramnt.genart.domain.repository.StyleRepository
 import dagger.Binds
 import dagger.Module
@@ -15,4 +17,9 @@ abstract class RepositoryModule {
     abstract fun bindStyleRepository(
         styleRepositoryImpl: StyleRepositoryImpl
     ): StyleRepository
+
+    @Binds
+    abstract fun bindImageGenerationRepository(
+        imageGenerationRepositoryImpl: ImageGenerationRepositoryImpl
+    ): ImageGenerationRepository
 } 

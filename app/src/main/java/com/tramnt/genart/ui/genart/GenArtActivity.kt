@@ -48,6 +48,9 @@ class GenArtActivity : BaseMviActivity<GenArtIntent, GenArtViewState, GenArtEffe
             is GenArtEffect.ShowError -> {
                 Toast.makeText(this, effect.message, Toast.LENGTH_SHORT).show()
             }
+            is GenArtEffect.ShowSuccess -> {
+                Toast.makeText(this, effect.message, Toast.LENGTH_SHORT).show()
+            }
             is GenArtEffect.ShowPhotoPicker -> {
                 val intent = Intent(this, PickPhotoActivity::class.java)
                 photoPickerLauncher.launch(intent)
@@ -55,4 +58,3 @@ class GenArtActivity : BaseMviActivity<GenArtIntent, GenArtViewState, GenArtEffe
         }
     }
 }
-

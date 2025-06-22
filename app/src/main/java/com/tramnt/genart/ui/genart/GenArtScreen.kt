@@ -117,18 +117,26 @@ fun GenArtScreen(
                     // Generate AI Button
                     Button(
                         onClick = { onIntent(GenArtIntent.GenerateAI) },
-                        enabled = state.photoUri != null,
+                        enabled = state.photoUri != null && !state.isGenerating,
                         modifier = Modifier
                             .weight(2f)
                             .height(48.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (state.photoUri != null) Color(0xFFE040FB) else Color(
+                            containerColor = if (state.photoUri != null && !state.isGenerating) Color(0xFFE040FB) else Color(
                                 0xFFCCCCCC
                             )
                         ),
                         shape = RoundedCornerShape(16.dp)
                     ) {
-                        Text("Generate AI Art", color = Color.White)
+                        if (state.isGenerating) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Generate AI Art", color = Color.White)
+                        }
                     }
                 }
             }
@@ -141,49 +149,88 @@ fun GenArtScreen(
                 .padding(top = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+            // Prompt Input
             OutlinedTextField(
                 value = state.prompt,
-                onValueChange = {},
+                onValueChange = { onIntent(GenArtIntent.UpdatePrompt(it)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
                     .border(2.dp, Color.Magenta, RoundedCornerShape(16.dp)),
-                placeholder = { Text("Enter your prompt…") },
-                singleLine = true,
+                placeholder = { Text("Enter your prompt (e.g., yellow hair, chubby, anime girl...)") },
+                singleLine = false,
                 shape = RoundedCornerShape(16.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(1f)
-                    .border(2.dp, Color.Magenta, RoundedCornerShape(16.dp))
-                    .clickable { onIntent(GenArtIntent.AddPhoto) },
-                contentAlignment = Alignment.Center
-            ) {
-                if (state.photoUri != null) {
-                    Image(
-                        painter = rememberAsyncImagePainter(state.photoUri),
-                        contentDescription = "Selected Photo",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(RoundedCornerShape(16.dp))
-                    )
-                } else {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            painter = painterResource(id = android.R.drawable.ic_menu_gallery),
-                            contentDescription = null,
-                            modifier = Modifier.size(48.dp),
-                            tint = Color.LightGray
+            // Image Display Section
+            Column {
+                // Original Image
+                Text(
+                    text = "Original Image",
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(1f)
+                        .border(2.dp, Color.Magenta, RoundedCornerShape(16.dp))
+                        .clickable { onIntent(GenArtIntent.AddPhoto) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (state.photoUri != null) {
+                        Image(
+                            painter = rememberAsyncImagePainter(state.photoUri),
+                            contentDescription = "Selected Photo",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(16.dp))
                         )
-                        Text("Add your photo", color = Color.Gray)
+                    } else {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                painter = painterResource(id = android.R.drawable.ic_menu_gallery),
+                                contentDescription = null,
+                                modifier = Modifier.size(48.dp),
+                                tint = Color.LightGray
+                            )
+                            Text("Add your photo", color = Color.Gray)
+                        }
                     }
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
+            
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Generated Image
+            if (state.generatedImageUrl != null) {
+                Column {
+                    Text(
+                        text = "Generated AI Art",
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f)
+                            .border(2.dp, Color.Green, RoundedCornerShape(16.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = rememberAsyncImagePainter(state.generatedImageUrl),
+                            contentDescription = "Generated AI Art",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(RoundedCornerShape(16.dp))
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
             StyleTabComponent(
                 state = state,
