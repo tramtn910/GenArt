@@ -45,6 +45,14 @@
             android:exported="false"
             android:label="Pick Photo"
             android:theme="@style/Theme.GenArt" />
+        <activity
+            android:name=".ui.result.ResultActivity"
+            android:exported="false"
+            android:theme="@style/Theme.GenArt" />
     </application>
+
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 
 </manifest>

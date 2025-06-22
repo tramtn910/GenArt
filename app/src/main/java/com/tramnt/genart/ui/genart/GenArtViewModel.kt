@@ -2,7 +2,6 @@ package com.tramnt.genart.ui.genart
 
 import androidx.lifecycle.viewModelScope
 import com.tramnt.genart.base.mvi.MviViewModel
-import com.tramnt.genart.domain.repository.SignatureRepository
 import com.tramnt.genart.domain.usecase.GenerateImageUseCase
 import com.tramnt.genart.domain.usecase.GetStylesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,7 +11,6 @@ import javax.inject.Inject
 @HiltViewModel
 class GenArtViewModel @Inject constructor(
     private val getStylesUseCase: GetStylesUseCase,
-    private val signatureRepository: SignatureRepository,
     private val generateImageUseCase: GenerateImageUseCase
 ) : MviViewModel<GenArtIntent, GenArtViewState, GenArtEffect>() {
 
@@ -22,9 +20,7 @@ class GenArtViewModel @Inject constructor(
     override fun processIntent(intent: GenArtIntent) {
         when (intent) {
             is GenArtIntent.LoadStyles -> {
-                viewModelScope.launch {
-                    loadStyles()
-                }
+                viewModelScope.launch { loadStyles() }
             }
             is GenArtIntent.SelectStyleCategory -> selectStyleCategory(intent.category)
             is GenArtIntent.SelectStyleItem -> selectStyleItem(intent.style)
@@ -32,28 +28,13 @@ class GenArtViewModel @Inject constructor(
                 setState { copy(prompt = intent.prompt) }
             }
             is GenArtIntent.AddPhoto -> {
-                viewModelScope.launch {
-                    sendEffect { GenArtEffect.ShowPhotoPicker }
-                }
+                viewModelScope.launch { sendEffect { GenArtEffect.ShowPhotoPicker } }
             }
             is GenArtIntent.PhotoSelected -> {
                 setState { copy(photoUri = intent.photoUri) }
             }
-            is GenArtIntent.SelectStyle -> {
-                // Handle style selection
-            }
             is GenArtIntent.GenerateAI -> {
-                viewModelScope.launch {
-                    generateAI()
-                }
-            }
-            is GenArtIntent.TestAuthentication -> {
-                viewModelScope.launch {
-                    testAuthentication()
-                }
-            }
-            is GenArtIntent.ClearAuthStatus -> {
-                setState { copy(authStatus = null) }
+                viewModelScope.launch { generateAI() }
             }
         }
     }
@@ -69,58 +50,21 @@ class GenArtViewModel @Inject constructor(
             return
         }
 
-        setState { copy(isGenerating = true, error = null, generatedImageUrl = null) }
+        setState { copy(isGenerating = true, error = null) }
 
         generateImageUseCase(
             imageUri = photoUri,
             styleId = selectedStyle?.id,
             prompt = prompt.takeIf { it.isNotBlank() },
-            positivePrompt = prompt.takeIf { it.isNotBlank() },
-            mode = 0, // AI-Art mode
-            type = "image-to-image"
+            positivePrompt = prompt.takeIf { it.isNotBlank() }
         ).fold(
             onSuccess = { imageUrl ->
-                setState {
-                    copy(
-                        isGenerating = false,
-                        generatedImageUrl = imageUrl
-                    )
-                }
-                sendEffect { GenArtEffect.ShowSuccess("Image generated successfully!") }
+                setState { copy(isGenerating = false) }
+                sendEffect { GenArtEffect.NavigateToResult(imageUrl) }
             },
             onFailure = { exception ->
                 val errorMessage = exception.message ?: "Failed to generate image"
-                setState {
-                    copy(
-                        isGenerating = false,
-                        error = errorMessage
-                    )
-                }
-                sendEffect { GenArtEffect.ShowError(errorMessage) }
-            }
-        )
-    }
-
-    private suspend fun testAuthentication() {
-        setState { copy(isAuthenticating = true, authStatus = null) }
-
-        signatureRepository.testAuthentication().fold(
-            onSuccess = { message ->
-                setState {
-                    copy(
-                        isAuthenticating = false,
-                        authStatus = message
-                    )
-                }
-            },
-            onFailure = { exception ->
-                val errorMessage = exception.message ?: "Authentication failed"
-                setState {
-                    copy(
-                        isAuthenticating = false,
-                        authStatus = errorMessage
-                    )
-                }
+                setState { copy(isGenerating = false, error = errorMessage) }
                 sendEffect { GenArtEffect.ShowError(errorMessage) }
             }
         )
@@ -135,7 +79,8 @@ class GenArtViewModel @Inject constructor(
                     copy(
                         isLoading = false,
                         styleCategories = categories,
-                        selectedCategory = categories.firstOrNull()
+                        selectedCategory = categories.firstOrNull(),
+                        selectedStyleItem = categories.firstOrNull()?.styles?.firstOrNull()
                     )
                 }
             },

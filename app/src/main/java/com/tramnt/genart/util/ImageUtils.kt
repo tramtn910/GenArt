@@ -1,11 +1,17 @@
 package com.tramnt.genart.util
 
+import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.OutputStream
 
 object ImageUtils {
     fun checkImagePermission(context: Context): Boolean {
@@ -28,13 +34,13 @@ object ImageUtils {
         val uris = mutableListOf<Uri>()
         val projection = arrayOf(MediaStore.Images.Media._ID)
         val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
-        
+
         val collection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
         } else {
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI
         }
-        
+
         val query = context.contentResolver.query(
             collection,
             projection, null, null, sortOrder
@@ -65,4 +71,54 @@ object ImageUtils {
     fun isAndroid13Plus(): Boolean {
         return Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
     }
+
+    suspend fun saveBitmap(context: Context, bitmap: Bitmap, displayName: String): Result<Uri> =
+        withContext(Dispatchers.IO) {
+            val imageCollection = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            } else {
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+            }
+
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, "$displayName.jpg")
+                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    put(MediaStore.Images.Media.IS_PENDING, 1)
+                    put(
+                        MediaStore.Images.Media.RELATIVE_PATH,
+                        Environment.DIRECTORY_PICTURES + "/GenArt"
+                    )
+                }
+            }
+
+            var imageUri: Uri? = null
+            var outputStream: OutputStream? = null
+
+            runCatching {
+                val resolver = context.contentResolver
+                imageUri = resolver.insert(imageCollection, contentValues)
+                    ?: throw Exception("Failed to create new MediaStore record.")
+
+                outputStream = resolver.openOutputStream(imageUri!!)
+                    ?: throw Exception("Failed to get output stream.")
+
+                if (!bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream!!)) {
+                    throw Exception("Failed to save bitmap.")
+                }
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    contentValues.clear()
+                    contentValues.put(MediaStore.Images.Media.IS_PENDING, 0)
+                    resolver.update(imageUri!!, contentValues, null, null)
+                }
+
+                Result.success(imageUri!!)
+            }.getOrElse {
+                imageUri?.let { uri ->
+                    context.contentResolver.delete(uri, null, null)
+                }
+                Result.failure(it)
+            }
+        }
 } 

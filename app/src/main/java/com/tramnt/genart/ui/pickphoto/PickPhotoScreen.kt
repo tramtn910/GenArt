@@ -1,5 +1,6 @@
 package com.tramnt.genart.ui.pickphoto
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -24,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,9 +37,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.paging.LoadState
+import androidx.paging.PagingData
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
 import coil.compose.rememberAsyncImagePainter
 import com.tramnt.genart.R
 import com.tramnt.genart.util.ImageUtils
+import kotlinx.coroutines.flow.Flow
+import androidx.compose.foundation.lazy.grid.items
 
 @Composable
 fun PickPhotoScreen(
@@ -111,7 +118,7 @@ private fun PermissionRequiredContent(
             )
             Text(
                 text = if (isModernAndroid) "Photo Access Required" else "Storage Permission Required",
-                style = androidx.compose.material3.MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineSmall
             )
             Text(
                 text = if (isModernAndroid) {
@@ -149,7 +156,7 @@ private fun EmptyPhotosContent(modifier: Modifier = Modifier) {
             )
             Text(
                 text = "No Photos Found",
-                style = androidx.compose.material3.MaterialTheme.typography.headlineSmall
+                style = MaterialTheme.typography.headlineSmall
             )
             Text(
                 text = "No photos were found on your device.",
@@ -199,6 +206,100 @@ private fun PhotosGrid(
                         .padding(8.dp)
                         .size(24.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun PickPhotoScreenPaging(
+    photoPagingFlow: Flow<PagingData<Uri>>,
+    selectedPhoto: Uri?,
+    onPhotoClick: (Uri) -> Unit,
+    onBackClick: () -> Unit,
+    onNextClick: () -> Unit
+) {
+    val photos: LazyPagingItems<Uri> = photoPagingFlow.collectAsLazyPagingItems()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .padding(top = 32.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            IconButton(onClick = onBackClick) {
+                Icon(Icons.Default.Close, contentDescription = "Close")
+            }
+            TextButton(
+                onClick = onNextClick,
+                enabled = selectedPhoto != null
+            ) {
+                Text("Next")
+            }
+        }
+
+        when (photos.loadState.refresh) {
+            is LoadState.Loading -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            is LoadState.Error -> {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Error loading photos")
+                }
+            }
+            else -> {
+                if (photos.itemCount == 0) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text("No Photos Found")
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(photos.itemCount) { index ->
+                            val uri = photos[index]
+                            if (uri != null) {
+                                Box(
+                                    modifier = Modifier
+                                        .aspectRatio(1f)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .clickable { onPhotoClick(uri) }
+                                ) {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(uri),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize()
+                                    )
+                                    val iconPainter = if (selectedPhoto == uri) {
+                                        painterResource(id = R.drawable.ic_select)
+                                    } else {
+                                        painterResource(id = R.drawable.ic_unselected)
+                                    }
+                                    Image(
+                                        painter = iconPainter,
+                                        contentDescription = null,
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(8.dp)
+                                            .size(24.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }

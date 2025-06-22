@@ -57,18 +57,12 @@ class PickPhotoActivity :
 
     @Composable
     override fun RenderView(state: PickPhotoViewState, sendIntent: (PickPhotoIntent) -> Unit) {
-        PickPhotoScreen(
-            state = state,
-            onBackClick = {
-                finish()
-            },
-            onNextClick = {
-                navigateNext()
-            },
-            onRequestPermission = {
-                requestAppropriatePermission()
-            },
-            onIntent = sendIntent
+        PickPhotoScreenPaging(
+            photoPagingFlow = viewModel.photoPagingFlow,
+            selectedPhoto = state.selectedPhoto,
+            onPhotoClick = { uri -> sendIntent(PickPhotoIntent.SelectPhoto(uri)) },
+            onBackClick = { finish() },
+            onNextClick = { navigateNext() }
         )
     }
     

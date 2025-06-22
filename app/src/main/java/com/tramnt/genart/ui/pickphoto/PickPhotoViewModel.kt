@@ -9,6 +9,12 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
+import com.tramnt.genart.util.MediaStoreImagePagingSource
 
 @HiltViewModel
 class PickPhotoViewModel @Inject constructor(
@@ -16,6 +22,11 @@ class PickPhotoViewModel @Inject constructor(
 ) : MviViewModel<PickPhotoIntent, PickPhotoViewState, PickPhotoEffect>() {
 
     override val initialState: PickPhotoViewState = PickPhotoViewState()
+
+    val photoPagingFlow: Flow<PagingData<Uri>> = Pager(
+        config = PagingConfig(pageSize = 30),
+        pagingSourceFactory = { MediaStoreImagePagingSource(context) }
+    ).flow.cachedIn(viewModelScope)
 
     override fun processIntent(intent: PickPhotoIntent) {
         when (intent) {

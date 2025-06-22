@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.core.view.WindowCompat
 import com.tramnt.genart.base.mvi.BaseMviActivity
 import com.tramnt.genart.ui.pickphoto.PickPhotoActivity
+import com.tramnt.genart.ui.result.ResultActivity
 import com.tramnt.genart.ui.theme.GenArtTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -48,12 +49,15 @@ class GenArtActivity : BaseMviActivity<GenArtIntent, GenArtViewState, GenArtEffe
             is GenArtEffect.ShowError -> {
                 Toast.makeText(this, effect.message, Toast.LENGTH_SHORT).show()
             }
-            is GenArtEffect.ShowSuccess -> {
-                Toast.makeText(this, effect.message, Toast.LENGTH_SHORT).show()
-            }
             is GenArtEffect.ShowPhotoPicker -> {
                 val intent = Intent(this, PickPhotoActivity::class.java)
                 photoPickerLauncher.launch(intent)
+            }
+            is GenArtEffect.NavigateToResult -> {
+                val intent = Intent(this, ResultActivity::class.java).apply {
+                    putExtra("image_url", effect.imageUrl)
+                }
+                startActivity(intent)
             }
         }
     }

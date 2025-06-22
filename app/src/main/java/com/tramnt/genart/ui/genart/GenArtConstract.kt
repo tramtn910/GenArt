@@ -28,7 +28,7 @@ data class GenArtViewState(
 ) : MviViewState
 
 sealed class GenArtEffect : MviEffect {
-    data object ShowPhotoPicker : MviEffect()
-    data class ShowError(val message: String) : MviEffect()
-    data class NavigateToResult(val imageUrl: String) : MviEffect()
+    data object ShowPhotoPicker : GenArtEffect()
+    data class ShowError(val message: String) : GenArtEffect()
+    data class NavigateToResult(val imageUrl: String) : GenArtEffect()
 } 
