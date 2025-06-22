@@ -49,6 +49,7 @@
             android:name=".ui.result.ResultActivity"
             android:exported="false"
             android:theme="@style/Theme.GenArt" />
+        <activity android:name=".ui.history.HistoryActivity" />
     </application>
 
     <uses-permission

@@ -26,7 +26,7 @@ abstract class MviViewModel<I : MviIntent, S : MviViewState, E : MviEffect> : Vi
         }
     }
 
-    protected fun setState(reducer: S.() -> S) {
+    fun setState(reducer: S.() -> S) {
         val currentState = uiState.value
         if (currentState != null) {
             _uiState.update { it.reducer() }

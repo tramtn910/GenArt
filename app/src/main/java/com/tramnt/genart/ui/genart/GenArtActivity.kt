@@ -35,12 +35,14 @@ class GenArtActivity : BaseMviActivity<GenArtIntent, GenArtViewState, GenArtEffe
     }
 
     @Composable
-    override fun RenderView(state: GenArtViewState, sendIntent: (GenArtIntent) -> Unit) {
+    override fun RenderView(state: GenArtViewState?, sendIntent: (GenArtIntent) -> Unit) {
         GenArtTheme {
-            GenArtScreen(
-                state = state,
-                onIntent = sendIntent
-            )
+            if (state != null) {
+                GenArtScreen(
+                    state = state,
+                    onIntent = sendIntent
+                )
+            }
         }
     }
 
@@ -56,6 +58,8 @@ class GenArtActivity : BaseMviActivity<GenArtIntent, GenArtViewState, GenArtEffe
             is GenArtEffect.NavigateToResult -> {
                 val intent = Intent(this, ResultActivity::class.java).apply {
                     putExtra("image_url", effect.imageUrl)
+                    putExtra("prompt", viewModel.uiState.value.prompt)
+                    putExtra("style", viewModel.uiState.value.selectedStyleItem?.name)
                 }
                 startActivity(intent)
             }

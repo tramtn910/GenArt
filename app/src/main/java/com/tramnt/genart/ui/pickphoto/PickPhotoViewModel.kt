@@ -15,6 +15,8 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.tramnt.genart.util.MediaStoreImagePagingSource
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 @HiltViewModel
 class PickPhotoViewModel @Inject constructor(
@@ -23,10 +25,15 @@ class PickPhotoViewModel @Inject constructor(
 
     override val initialState: PickPhotoViewState = PickPhotoViewState()
 
-    val photoPagingFlow: Flow<PagingData<Uri>> = Pager(
-        config = PagingConfig(pageSize = 30),
-        pagingSourceFactory = { MediaStoreImagePagingSource(context) }
-    ).flow.cachedIn(viewModelScope)
+    private fun createPhotoPagingFlow(): Flow<PagingData<Uri>> {
+        return Pager(
+            config = PagingConfig(pageSize = 30),
+            pagingSourceFactory = { MediaStoreImagePagingSource(context) }
+        ).flow.cachedIn(viewModelScope)
+    }
+
+    private val _photoPagingFlow = MutableStateFlow(createPhotoPagingFlow())
+    val photoPagingFlow: StateFlow<Flow<PagingData<Uri>>> get() = _photoPagingFlow
 
     override fun processIntent(intent: PickPhotoIntent) {
         when (intent) {
@@ -69,7 +76,7 @@ class PickPhotoViewModel @Inject constructor(
     private fun handlePermissionResult(granted: Boolean) {
         if (granted) {
             setState { copy(hasPermission = true) }
-            loadPhotos()
+            _photoPagingFlow.value = createPhotoPagingFlow()
         } else {
             setState { copy(hasPermission = false) }
         }

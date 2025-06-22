@@ -16,7 +16,7 @@ abstract class BaseMviActivity<I : MviIntent, S : MviViewState, E : MviEffect, V
     protected abstract val viewModel: VM
 
     @Composable
-    abstract fun RenderView(state: S, sendIntent: (I) -> Unit)
+    abstract fun RenderView(state: S?, sendIntent: (I) -> Unit)
 
     open fun handleEffect(effect: E) {}
     

@@ -11,6 +11,8 @@ import androidx.core.view.WindowCompat
 import com.tramnt.genart.base.mvi.BaseMviActivity
 import com.tramnt.genart.util.ImageUtils
 import dagger.hilt.android.AndroidEntryPoint
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 
 @AndroidEntryPoint
 class PickPhotoActivity :
@@ -56,14 +58,19 @@ class PickPhotoActivity :
     }
 
     @Composable
-    override fun RenderView(state: PickPhotoViewState, sendIntent: (PickPhotoIntent) -> Unit) {
-        PickPhotoScreenPaging(
-            photoPagingFlow = viewModel.photoPagingFlow,
-            selectedPhoto = state.selectedPhoto,
-            onPhotoClick = { uri -> sendIntent(PickPhotoIntent.SelectPhoto(uri)) },
-            onBackClick = { finish() },
-            onNextClick = { navigateNext() }
-        )
+    override fun RenderView(state: PickPhotoViewState?, sendIntent: (PickPhotoIntent) -> Unit) {
+        if (state != null) {
+            val pagingFlow by viewModel.photoPagingFlow.collectAsState()
+            PickPhotoScreenPaging(
+                photoPagingFlow = pagingFlow,
+                selectedPhoto = state.selectedPhoto,
+                hasPermission = state.hasPermission,
+                onRequestPermission = { requestAppropriatePermission() },
+                onPhotoClick = { uri -> sendIntent(PickPhotoIntent.SelectPhoto(uri)) },
+                onBackClick = { finish() },
+                onNextClick = { navigateNext() }
+            )
+        }
     }
     
     private fun navigateNext() {

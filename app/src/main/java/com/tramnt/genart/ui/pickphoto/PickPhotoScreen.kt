@@ -215,6 +215,8 @@ private fun PhotosGrid(
 fun PickPhotoScreenPaging(
     photoPagingFlow: Flow<PagingData<Uri>>,
     selectedPhoto: Uri?,
+    hasPermission: Boolean,
+    onRequestPermission: () -> Unit,
     onPhotoClick: (Uri) -> Unit,
     onBackClick: () -> Unit,
     onNextClick: () -> Unit
@@ -241,6 +243,11 @@ fun PickPhotoScreenPaging(
             ) {
                 Text("Next")
             }
+        }
+
+        if (!hasPermission) {
+            PermissionRequiredContent(onRequestPermission)
+            return
         }
 
         when (photos.loadState.refresh) {
