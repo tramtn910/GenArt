@@ -15,6 +15,8 @@ sealed class GenArtIntent : MviIntent {
     data class SelectStyleCategory(val category: StyleCategory) : GenArtIntent()
     data class SelectStyleItem(val style: Style) : GenArtIntent()
     data class PhotoSelected(val photoUri: String) : GenArtIntent()
+    data object TestAuthentication : GenArtIntent()
+    data object ClearAuthStatus : GenArtIntent()
 }
 
 data class GenArtViewState(
@@ -25,7 +27,9 @@ data class GenArtViewState(
     val selectedCategory: StyleCategory? = null,
     val selectedStyleItem: Style? = null,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isAuthenticating: Boolean = false,
+    val authStatus: String? = null,
 ) : MviViewState
 
 sealed class GenArtEffect : MviEffect {

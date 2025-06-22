@@ -2,6 +2,7 @@ package com.tramnt.genart.ui.genart
 
 import androidx.lifecycle.viewModelScope
 import com.tramnt.genart.base.mvi.MviViewModel
+import com.tramnt.genart.domain.repository.SignatureRepository
 import com.tramnt.genart.domain.usecase.GetStylesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -9,7 +10,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class GenArtViewModel @Inject constructor(
-    private val getStylesUseCase: GetStylesUseCase
+    private val getStylesUseCase: GetStylesUseCase,
+    private val signatureRepository: SignatureRepository
 ) : MviViewModel<GenArtIntent, GenArtViewState, GenArtEffect>() {
 
     override val initialState: GenArtViewState
@@ -37,7 +39,36 @@ class GenArtViewModel @Inject constructor(
             is GenArtIntent.GenerateAI -> {
                 // Handle AI generation
             }
-            else -> {}
+            is GenArtIntent.TestAuthentication -> testAuthentication()
+            is GenArtIntent.ClearAuthStatus -> {
+                setState { copy(authStatus = null) }
+            }
+        }
+    }
+    private fun testAuthentication() {
+        viewModelScope.launch {
+            setState { copy(isAuthenticating = true, authStatus = null) }
+
+            signatureRepository.testAuthentication().fold(
+                onSuccess = { message ->
+                    setState {
+                        copy(
+                            isAuthenticating = false,
+                            authStatus = message
+                        )
+                    }
+                },
+                onFailure = { exception ->
+                    val errorMessage = exception.message ?: "Authentication failed"
+                    setState {
+                        copy(
+                            isAuthenticating = false,
+                            authStatus = errorMessage
+                        )
+                    }
+                    sendEffect { GenArtEffect.ShowError(errorMessage) }
+                }
+            )
         }
     }
 

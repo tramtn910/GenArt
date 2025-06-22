@@ -4,11 +4,30 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
@@ -17,14 +36,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.IntOffset
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.ui.unit.sp
 import coil.compose.rememberAsyncImagePainter
 import com.tramnt.genart.ui.genart.componant.StyleTabComponent
 
@@ -40,28 +56,81 @@ fun GenArtScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         bottomBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 24.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFFE400D9),
-                                Color(0xFF1D00F5)
-                            )
-                        )
-                    )
-                    .clickable { onIntent(GenArtIntent.GenerateAI) },
-                contentAlignment = Alignment.Center
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 24.dp)
             ) {
-                Text(
-                    text = "Generate AI",
-                    modifier = Modifier.padding(vertical = 16.dp),
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
+                // Authentication Status Card
+                state.authStatus?.let { status ->
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(bottom = 8.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E8))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = status,
+                                color = Color(0xFF2E7D32),
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(onClick = { onIntent(GenArtIntent.ClearAuthStatus) }) {
+                                Text("×", fontSize = 20.sp, color = Color(0xFF2E7D32))
+                            }
+                        }
+                    }
+                }
+
+                // Buttons Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Test Auth Button
+                    Button(
+                        onClick = { onIntent(GenArtIntent.TestAuthentication) },
+                        enabled = !state.isAuthenticating,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF2196F3)
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        if (state.isAuthenticating) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Test Auth", color = Color.White)
+                        }
+                    }
+
+                    // Generate AI Button
+                    Button(
+                        onClick = { onIntent(GenArtIntent.GenerateAI) },
+                        enabled = state.photoUri != null,
+                        modifier = Modifier
+                            .weight(2f)
+                            .height(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (state.photoUri != null) Color(0xFFE040FB) else Color(
+                                0xFFCCCCCC
+                            )
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text("Generate AI Art", color = Color.White)
+                    }
+                }
             }
         }
     ) { innerPadding ->
