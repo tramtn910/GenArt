@@ -1,5 +1,6 @@
 package com.tramnt.genart.util
 
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
@@ -49,12 +50,17 @@ object ImageUtils {
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idColumn)
-                val uri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL, id)
+                val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL, id)
+                } else {
+                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                }
                 uris.add(uri)
             }
         }
         return uris
     }
+
 
     fun getRequiredPermission(): String {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

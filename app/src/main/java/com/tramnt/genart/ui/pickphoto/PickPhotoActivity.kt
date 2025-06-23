@@ -7,12 +7,13 @@ import android.provider.Settings
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
 import com.tramnt.genart.base.mvi.BaseMviActivity
 import com.tramnt.genart.util.ImageUtils
+import com.tramnt.genart.util.SystemBarUtils
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 
 @AndroidEntryPoint
 class PickPhotoActivity :
@@ -34,6 +35,7 @@ class PickPhotoActivity :
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        SystemBarUtils.hideSystemBars(this)
         viewModel.processIntent(PickPhotoIntent.LoadPhotos)
     }
 
@@ -72,7 +74,7 @@ class PickPhotoActivity :
             )
         }
     }
-    
+
     private fun navigateNext() {
         val selectedPhoto = viewModel.uiState.value.selectedPhoto
         if (selectedPhoto != null) {

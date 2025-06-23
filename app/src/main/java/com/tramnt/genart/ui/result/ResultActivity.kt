@@ -5,12 +5,11 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import com.tramnt.genart.base.mvi.BaseMviActivity
-import dagger.hilt.android.AndroidEntryPoint
 import com.tramnt.genart.ui.pickphoto.PickPhotoActivity
+import com.tramnt.genart.util.SystemBarUtils
+import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class ResultActivity : BaseMviActivity<ResultIntent, ResultViewState, ResultEffect, ResultViewModel>() {
@@ -18,6 +17,7 @@ class ResultActivity : BaseMviActivity<ResultIntent, ResultViewState, ResultEffe
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        SystemBarUtils.hideSystemBars(this)
         val imageUrl = intent.getStringExtra("image_url") ?: ""
         val prompt = intent.getStringExtra("prompt") ?: ""
         val style = intent.getStringExtra("style")

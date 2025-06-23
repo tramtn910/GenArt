@@ -3,9 +3,10 @@ package com.tramnt.genart.ui.history
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.viewModels
-import com.tramnt.genart.base.mvi.BaseMviActivity
-import dagger.hilt.android.AndroidEntryPoint
 import androidx.compose.runtime.Composable
+import com.tramnt.genart.base.mvi.BaseMviActivity
+import com.tramnt.genart.util.SystemBarUtils
+import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class HistoryActivity : BaseMviActivity<HistoryIntent, HistoryViewState, HistoryEffect, HistoryViewModel>() {
@@ -13,6 +14,7 @@ class HistoryActivity : BaseMviActivity<HistoryIntent, HistoryViewState, History
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        SystemBarUtils.hideSystemBars(this)
         viewModel.processIntent(HistoryIntent.LoadHistory)
     }
     @Composable

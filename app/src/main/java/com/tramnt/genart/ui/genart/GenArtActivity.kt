@@ -1,7 +1,11 @@
 package com.tramnt.genart.ui.genart
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.view.View
+import android.view.WindowInsets
+import android.view.WindowInsetsController
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -12,6 +16,7 @@ import com.tramnt.genart.ui.pickphoto.PickPhotoActivity
 import com.tramnt.genart.ui.result.ResultActivity
 import com.tramnt.genart.ui.theme.GenArtTheme
 import dagger.hilt.android.AndroidEntryPoint
+import com.tramnt.genart.util.SystemBarUtils
 
 @AndroidEntryPoint
 class GenArtActivity : BaseMviActivity<GenArtIntent, GenArtViewState, GenArtEffect, GenArtViewModel>() {
@@ -32,6 +37,7 @@ class GenArtActivity : BaseMviActivity<GenArtIntent, GenArtViewState, GenArtEffe
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        SystemBarUtils.hideSystemBars(this)
     }
 
     @Composable

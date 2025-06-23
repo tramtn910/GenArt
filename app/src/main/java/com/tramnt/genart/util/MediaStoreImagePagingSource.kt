@@ -6,6 +6,7 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
+import android.util.Log
 
 class MediaStoreImagePagingSource(
     private val context: Context
@@ -39,7 +40,16 @@ class MediaStoreImagePagingSource(
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
             while (cursor.moveToNext() && count < pageSize) {
                 val id = cursor.getLong(idColumn)
-                val uri = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL, id)
+                val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    Log.d("MediaStorePaging", "Using getContentUri")
+                    MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL, id)
+                } else {
+                    Log.d("MediaStorePaging", "Using withAppendedId")
+                    android.content.ContentUris.withAppendedId(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id
+                    )
+                }
+
                 uris.add(uri)
                 count++
             }
